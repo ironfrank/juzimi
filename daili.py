@@ -45,6 +45,7 @@ def get_url(code=0,ips=[]):
     """
     try:
         ip = choice(ips)
+        print ip
     except:
         return False
     else:
@@ -80,9 +81,8 @@ for i in xrange(6000):
     if i % 1000 == 0:
         ips.extend(get_ip())
         print len(ips)
-    #for index,item in enumerate(ips):
-    #    print 
+
     # 启用线程，隔1秒产生一个线程，可控制时间加快投票速度 ,time.sleep的最小单位是毫秒
-    #t1 = threading.Thread(target=get_url,args=(i,ips))
-    #t1.start()
-    #time.sleep(1)
+    t1 = threading.Thread(target=get_url,args=(i,ips))
+    t1.start()
+    time.sleep(1)
