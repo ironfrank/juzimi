@@ -1,12 +1,6 @@
 #-*- coding:utf-8 -*-
-import random
-import requests
-import bs4, re
-import functools
+from FuncBox import *
 
-
-class StatusCodeException(Exception):
-    pass
 
 class RequestsBox(object): 
     useragent_list = ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:41.0) Gecko/20100101 Firefox/41.0',
@@ -31,20 +25,16 @@ class RequestsBox(object):
     response = None
     ip_list = []
     proxies = {'http':''}
-    
-    def outputfuncname(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kw):
-            print 'call %s():' % func.__name__
-            return func(*args, **kw)
-        return wrapper    
-    
-    @outputfuncname
+        
+    @methodName
     def __init__(self):
         self.response = requests.session()
-        self.change_proxies()
+        self.changeProxy()
     
-    @outputfuncname
+    def __del__(self):
+        self.response.close()
+    
+    @methodName
     def random_character_headers_func(self):       
         header_useragent = self.useragent_list[ random.randint(0,len(self.useragent_list) - 1) ]
         useragent_len = len(header_useragent) - 1
@@ -54,8 +44,8 @@ class RequestsBox(object):
             user_agent += header_useragent[item_n]
         self.headers['User-Agent'] = user_agent
     
-    @outputfuncname
-    def change_headers(self):
+    @methodName
+    def changeHeaders(self):
         dict_list = []
         nmax = 0
         for item in self.useragent_list:
@@ -68,65 +58,82 @@ class RequestsBox(object):
         self.headers['User-Agent'] = user_agent
         print self.headers
         
-    @outputfuncname
-    def change_proxies(self):
-        self.clear_cookies()
-        self.change_headers()
+    @methodName
+    def changeProxy(self):
+        self.clearCookies()
+        self.changeHeaders()
         #判断协议列表是否为空，如果为空，则获取新的代理
-        if not self.ip_list:
-            self.get_proxies_ip()
+        if len(self.ip_list) < 2:
+            self.getProxiesIP()
         elif self.proxies['http']:
             print 'Remove ip:',self.proxies['http']
             self.ip_list.remove(self.proxies['http'])
-        
+        print len(self.ip_list)
+        print self.ip_list
         self.proxies['http']= random.choice(self.ip_list)
         print self.proxies
     
-    @outputfuncname
-    def clear_cookies(self):
+    @methodName
+    def clearCookies(self):
         self.response.cookies.clear()
     
-    @outputfuncname
-    def safe_get_fromproxies(self,url):
+    @methodName
+    def proxyGet(self,url):
         while 1:
             try:
-                print '****************************************************'
-                print 'start requests.get:',url,self.proxies
-                html = self.response.get(url, headers=self.headers, proxies=self.proxies, timeout=5)
+                print '==============================================================================='
+                print '********************* Start get url and proxies *******************************'
+                print url
+                print self.proxies
+                print '==============================================================================='
+                html = self.response.get(url, headers=self.headers, proxies=self.proxies, timeout=5,allow_redirects=False)
                 if html.status_code != 200:
                     raise StatusCodeException(html.status_code)
                 #print html.content
-                with open('juzimi.html','w') as f:
-                    f.write(html.content)
+                #with open('juzimi.html','w') as f:
+                    #f.write(html.content)
                 return html
             
             except StatusCodeException, ex:
                 print 'Error Status Code:',ex
-                self.change_proxies()
+                self.changeProxy()
             except requests.exceptions.ReadTimeout, ex:
                 print 'Proxies Connection Timeout!',ex
-                self.change_proxies()                
+                self.changeProxy()                
             except requests.exceptions.ConnectionError,ex:
                 print 'Proxies Connection Error!',ex
-                self.change_proxies()
+                self.changeProxy()
+            except requests.exceptions.ChunkedEncodingError,ex:
+                print 'Proxies Connection Error!',ex
+                self.changeProxy()
+            except requests.exceptions.TooManyRedirects,ex:
+                print 'Proxies Connection Error!',ex
+                self.changeProxy()            
         #except AssertionError:
     
-    @outputfuncname
-    def get_proxies_ip(self):
-        """获取代理IP"""
-        url = "http://www.xicidaili.com/nn"
-        headers = { "Accept":"text/html,application/xhtml+xml,application/xml;",
-                    "Accept-Encoding":"gzip, deflate, sdch",
-                    "Accept-Language":"zh-CN,zh;q=0.8,en;q=0.6",
-                    "Referer":"http://www.xicidaili.com",
-                    "User-Agent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36"
-                    }
-        res = requests.get(url,headers=headers)
-        soup = bs4.BeautifulSoup(res.text, 'html.parser')
-        data = soup.table.find_all("td")
-        ip_compile= re.compile(r'<td>(\d+\.\d+\.\d+\.\d+)</td>')    # 匹配IP
-        port_compile = re.compile(r'<td>(\d+)</td>')                # 匹配端口
-        ip = re.findall(ip_compile,str(data))       # 获取所有IP
-        port = re.findall(port_compile,str(data))   # 获取所有端口
-        self.ip_list = [":".join(i) for i in zip(ip,port)]  # 组合IP+端口，如：115.112.88.23:8080 
-      
+    @methodName
+    def getProxiesIP(self):
+        try:
+            """获取代理IP"""
+            url = "http://www.xicidaili.com/nn"
+            headers = { "Accept":"text/html,application/xhtml+xml,application/xml;",
+                        "Accept-Encoding":"gzip, deflate, sdch",
+                        "Accept-Language":"zh-CN,zh;q=0.8,en;q=0.6",
+                        "Referer":"http://www.xicidaili.com",
+                        "User-Agent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36"
+                        }
+            res = requests.get(url,headers=headers)
+            soup = bs4.BeautifulSoup(res.text, 'html.parser')
+            data = soup.table.find_all("td")
+            ip_compile= re.compile(r'<td>(\d+\.\d+\.\d+\.\d+)</td>')    # 匹配IP
+            port_compile = re.compile(r'<td>(\d+)</td>')                # 匹配端口
+            ip = re.findall(ip_compile,str(data))       # 获取所有IP
+            port = re.findall(port_compile,str(data))   # 获取所有端口
+            self.ip_list = [":".join(i) for i in zip(ip,port)]  # 组合IP+端口，如：115.112.88.23:8080
+        except Exception as ex:
+            print ex
+            time.sleep(5)
+            self.getProxiesIP
+            
+        
+

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-# 戴儒锋
 # http://www.linuxyw.com
 import re
 import random
