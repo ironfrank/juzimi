@@ -134,6 +134,6 @@ class FilterContents:
                     about = element_content[0].div.getText()
                     content_dict['about'] = [self.createDBID(),item_writer,about]
                 else:
-                    ontent_dict['about'] = ''
+                    content_dict['about'] = ''
                 break
         return content_dict
