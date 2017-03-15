@@ -24,27 +24,52 @@ def main():
 
     for itemType in typeList:
         # 名人名言类型
-        if itemType[1] == 'writers':
-            witersBkgdList = filterBox.sortWritersBkgd(res, itemType[0])
-
-            for itemBKGD in witersBkgdList:
-                targetList = filterBox.sortWritersTarget(res, itemBKGD[0])
-
-                for itemTarget in targetList:
-                    contentDict = filterBox.sortContents(res, itemTarget[0])
-                    sqlList = db.seiriSQL(itemType[1], contentDict)
-                    db.insert(sqlList)
+        # if itemType[1] == 'writers':
+        #     while 1:
+        #         witersBkgdList = []
+        #         try:
+        #             witersBkgdList += filterBox.sortWritersBkgd(res, itemType[0])
+        #         except Exception,ex:
+        #             print ex
+        #             filterBox.changeProxy()
+        #         else:
+        #             break
+        #
+        #     for itemBKGD in witersBkgdList:
+        #         while 1:
+        #             try:
+        #                 targetList = filterBox.sortWritersTarget(res, itemBKGD[0])
+        #             except Exception,ex:
+        #                 print ex
+        #                 filterBox.changeProxy()
+        #             else:
+        #                 res.changeHeaders()
+        #                 break
+        #
+        #         for itemTarget in targetList:
+        #             contentDict = filterBox.sortContents(res, itemTarget[0])
+        #             sqlList = db.seiriSQL(itemType[1], contentDict)
+        #             db.insert(sqlList)
 
         # （除名人名言）小说、散文、电影等
-        if itemType[1] == 'books' or itemType[1] == 'jingdiantaici' or itemType[1] == 'zhaichao' or\
-            itemType[1] == 'sanwen' or itemType[1] == 'ongmantaici' or itemType[1] == 'lianxujutaici':
-            if itemType[1] == 'lianxujutaici':
-                targetList = filterBox.sortTarget(res, itemType[0])
+        # if itemType[1] == 'books' or itemType[1] == 'jingdiantaici' or itemType[1] == 'zhaichao' or\
+        #     itemType[1] == 'sanwen' or itemType[1] == 'ongmantaici' or itemType[1] == 'lianxujutaici':
+        if itemType[1] == 'books':
+            targetList = []
+            while 1:
+                try:
+                    targetList += filterBox.sortTarget(res, itemType[0])
+                except Exception,ex:
+                    print ex
+                    filterBox.changeProxy()
+                else:
+                    res.changeHeaders()
+                    break
 
-                for itemTarget in targetList:
-                    contentDict = filterBox.sortContents(res, itemTarget[0])
-                    sqlList = db.seiriSQL(itemType[1], contentDict)
-                    db.insert(sqlList)
+            for itemTarget in targetList:
+                contentDict = filterBox.sortContents(res, itemTarget[0])
+                sqlList = db.seiriSQL(itemType[1], contentDict)
+                db.insert(sqlList)
 
 if '__main__' == __name__:
     main()

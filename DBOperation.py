@@ -19,7 +19,7 @@ class juzimiDB(object):
     
     def insert(self,dbsql):
         for sqlitem in dbsql:
-            print sqlitem[0],sqlitem[1]
+            #print sqlitem[0],sqlitem[1]
             self.dbcur.execute(sqlitem[0],sqlitem[1])
         self.dbconn.commit()
     
