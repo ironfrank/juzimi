@@ -1,75 +1,44 @@
 # -*- coding:utf-8 -*-
-
-# import chardet
-# from selenium import webdriver
-# browser=webdriver.PhantomJS(executable_path='/usr/local/bin/phantomjs')
-from FilterContents import *
-from DBOperation import *
+from ExtractBox import *
+from juzimidb import *
 
 
-# sys._getframe().f_code.co_name
+def UpdateDB():
+    res = RequestsBox()#
+    db = JuzimiDB()
+    exbox = ExtractWebFrame()
 
-# chardit1 = chardet.detect(html.text)
-# print chardit1['encoding']
+    # db.seiriTypeTableSQL(exbox.sortType())
+    # db.executeSQL()
+
+    records = db.queryJuzimiTable()
+    for sType, name, url in records:
+        if name == '经典语录' or name == '名人名言' or name == '热门名人':
+            if name == '名人名言':
+                db.seiriWritersMapTableSQL(exbox.sortWritersBkgd(url))
+                db.executeSQL()
+
+                rows = db.queryWritersMapTable()
+                for sType, bkgd, url in rows:
+                    db.seiriWritersTableSQL(exbox.sortWritersTarget(sType,  bkgd, url))
+                    db.executeSQL()
+        else:# 提取（除名人名言外）其它类型（如：散文、电影等）作品列表
+            db.seiriTargetTableSQL(sType, exbox.sortTarget(url))
+            db.executeSQL()
+
+    for sType, name, url in records:
+        if name == '经典语录' or name == '名人名言' or name == '热门名人':
+            pass
+        else:
+            table_names = db.queryTargetTable(sType)
+            for item_name, item_url in table_names:
+                db.seiriContentsTableSQL(sType, item_name, exbox.sortContents(item_url))
+                db.executeSQL()
+
 
 def main():
-    url = "http://www.juzimi.com"
+    UpdateDB()
 
-    res = RequestsBox()
-    filterBox = FilterContents()
-    db = juzimiDB()
-
-    html = res.proxyGet(url)
-    typeList = filterBox.sortType(html)
-
-    for itemType in typeList:
-        # 名人名言类型
-        # if itemType[1] == 'writers':
-        #     while 1:
-        #         witersBkgdList = []
-        #         try:
-        #             witersBkgdList += filterBox.sortWritersBkgd(res, itemType[0])
-        #         except Exception,ex:
-        #             print ex
-        #             filterBox.changeProxy()
-        #         else:
-        #             break
-        #
-        #     for itemBKGD in witersBkgdList:
-        #         while 1:
-        #             try:
-        #                 targetList = filterBox.sortWritersTarget(res, itemBKGD[0])
-        #             except Exception,ex:
-        #                 print ex
-        #                 filterBox.changeProxy()
-        #             else:
-        #                 res.changeHeaders()
-        #                 break
-        #
-        #         for itemTarget in targetList:
-        #             contentDict = filterBox.sortContents(res, itemTarget[0])
-        #             sqlList = db.seiriSQL(itemType[1], contentDict)
-        #             db.insert(sqlList)
-
-        # （除名人名言）小说、散文、电影等
-        # if itemType[1] == 'books' or itemType[1] == 'jingdiantaici' or itemType[1] == 'zhaichao' or\
-        #     itemType[1] == 'sanwen' or itemType[1] == 'ongmantaici' or itemType[1] == 'lianxujutaici':
-        if itemType[1] == 'books':
-            targetList = []
-            while 1:
-                try:
-                    targetList += filterBox.sortTarget(res, itemType[0])
-                except Exception,ex:
-                    print ex
-                    filterBox.changeProxy()
-                else:
-                    res.changeHeaders()
-                    break
-
-            for itemTarget in targetList:
-                contentDict = filterBox.sortContents(res, itemTarget[0])
-                sqlList = db.seiriSQL(itemType[1], contentDict)
-                db.insert(sqlList)
 
 if '__main__' == __name__:
     main()

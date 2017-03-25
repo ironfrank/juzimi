@@ -1,5 +1,16 @@
 # -*- coding:utf-8 -*-
-from FuncBox import *
+from selenium import webdriver
+from selenium.webdriver.common.proxy import *
+
+browser = webdriver.Chrome()
+browser.set_page_load_timeout(10)
+browser.get('http://www.juzimi.com/article/302069')
+page_source = browser.page_source
+print page_source
+browser.get('http://www.juzimi.com/article/494819')
+page_source = browser.page_source
+print page_source
+browser.close()
 
 
 class RequestsBox(object):
@@ -49,20 +60,19 @@ class RequestsBox(object):
         'Accept-Encoding': 'gzip, deflate',
         'Connection': 'keep-alive'
     }
-    response = None
     browser = None
     ip_list = []
     proxies = {'http': ''}
+    proxy = None
 
     @methodName
     def __init__(self):
-        self.response = requests.session()
-        #self.browser = webdriver.PhantomJS(executable_path='/usr/local/bin/phantomjs')
-        self.changeProxy()
+        self.browser = webdriver.Chrome()#PhantomJS(executable_path='/usr/local/bin/phantomjs')
+        self.browser.set_page_load_timeout(10)
+        self.browser.set_script_timeout(10)
 
     def __del__(self):
-        self.response.close()
-        #self.browser.quit()
+        self.browser.close()
 
     @methodName
     def random_character_headers_func(self):
@@ -103,11 +113,6 @@ class RequestsBox(object):
 
     @methodName
     def changeProxy(self):
-        self.clearCookies()
-        #变换Headers中user-agent的标示
-        self.changeHeaders()
-
-        print self.ip_list
         # 判断协议列表是否为空，如果为空，则获取新的代理
         if len(self.ip_list) < 2:
             self.getDaxiangProxiesIP()
@@ -117,58 +122,34 @@ class RequestsBox(object):
 
         self.proxies['http'] = random.choice(self.ip_list)
 
+        # self.proxy = webdriver.Proxy()
+        # self.proxy.proxy_type = ProxyType.MANUAL
+        # self.proxy.http_proxy = '1.9.171.51:800'
+        # # 将代理设置添加到webdriver.DesiredCapabilities.PHANTOMJS中
+        # self.proxy.add_to_capabilities(webdriver.DesiredCapabilities.PHANTOMJS)
+        # self.browser.start_session(webdriver.DesiredCapabilities.PHANTOMJS)
+        self.browser.set_page_load_timeout(10)
+        self.browser.set_script_timeout(10)
+
     @methodName
     def clearCookies(self):
-        self.response.cookies.clear()
-        #self.browser.delete_all_cookies()
+        self.browser.delete_all_cookies()
 
     @methodName
     def proxyGet(self, url):
-        ncount = 0
-        self.changeHeaders()
-        self.clearCookies()
         while 1:
             try:
                 print '==============================================================================='
                 print '********************* Start get url and proxies *******************************'
-                print url, self.proxies
-                print self.headers
-                html = self.response.get(url,
-                                         headers=self.headers,
-                                         proxies=self.proxies,
-                                         timeout=10,
-                                         allow_redirects=False)
-                # browser.set_page_load_timeout(30)
-                # browser.get(url)
 
-                print '==============================================================================='
-                if html.status_code == 200 and html.content:
-                    self.saveHtml(html.content)
+                # 利用DesiredCapabilities(代理设置)参数值，重新打开一个sessionId，我看意思就相当于浏览器清空缓存后，加上代理重新访问一次url
+                self.browser.get(url)
 
-                    return html
-                else:
-                    raise StatusCodeException((html.status_code, html.content))
+                page_source = self.browser.page_source
+                print page_source
 
-                ncount += 1
-                if ncount >= 100:
-                    self.changeProxy()
-
-            except StatusCodeException, ex:
+            except Exception, ex:
                 print ex
-                self.changeProxy()
-            except requests.exceptions.ReadTimeout, ex:
-                print ex
-                self.changeProxy()
-            except requests.exceptions.ConnectionError, ex:
-                print ex
-                self.changeProxy()
-            except requests.exceptions.ChunkedEncodingError, ex:
-                print ex
-                self.changeProxy()
-            except requests.exceptions.TooManyRedirects, ex:
-                print ex
-                self.changeProxy()
-                # except AssertionError:
 
     @methodName
     def getDaxiangProxiesIP(self):

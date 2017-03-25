@@ -15,6 +15,7 @@ from exceptionBox import *
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+#def output()
 
 def methodName(func):
     @functools.wraps(func)
@@ -24,3 +25,5 @@ def methodName(func):
         return func(*args, **kw)
 
     return wrapper
+
+
